@@ -7,3 +7,6 @@ commands:
   config:
     aliases: [con]
     description: Display configuration parameters!
+  heal:
+    aliases: [h]
+    description: Heals a player.

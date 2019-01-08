@@ -20,6 +20,7 @@ public class Main extends JavaPlugin implements Listener{
 		saveDefaultConfig();
 		
 		Bukkit.getPluginManager().registerEvents(this, this);
+		getCommand("heal").setExecutor(new HealCommand());
 	}
 	@Override
 	public void onDisable() {
@@ -53,4 +54,5 @@ public class Main extends JavaPlugin implements Listener{
 		}		
 		return false;
 	}
+    
 }
