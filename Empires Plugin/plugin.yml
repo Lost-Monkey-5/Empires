@@ -4,6 +4,6 @@ main: com.empires.core.Main
 author: Samuel Dauchert
 description: Testing that Plugin!
 commands:
-  hello:
-    aliases: [hi]
-    description: Good test command!
+  config:
+    aliases: [con]
+    description: Display configuration parameters!
