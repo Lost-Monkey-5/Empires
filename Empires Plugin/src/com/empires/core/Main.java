@@ -21,6 +21,7 @@ public class Main extends JavaPlugin implements Listener{
 		
 		Bukkit.getPluginManager().registerEvents(this, this);
 		getCommand("heal").setExecutor(new HealCommand());
+		getCommand("number").setExecutor(new NumberCommand());
 	}
 	@Override
 	public void onDisable() {
