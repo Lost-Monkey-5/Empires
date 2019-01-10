@@ -20,6 +20,8 @@ public class Main extends JavaPlugin implements Listener{
 		saveDefaultConfig();
 		
 		Bukkit.getPluginManager().registerEvents(this, this);
+		Bukkit.getPluginManager().registerEvents(new SpawnListener(), this);
+		
 		getCommand("heal").setExecutor(new HealCommand());
 		getCommand("number").setExecutor(new NumberCommand());
 	}
@@ -27,6 +29,7 @@ public class Main extends JavaPlugin implements Listener{
 	public void onDisable() {
 		System.out.println("Plugin Disabled!");
 	}
+	
 	@EventHandler
 	public void onMove(PlayerMoveEvent e) {
 		Player p = e.getPlayer();
@@ -55,5 +58,4 @@ public class Main extends JavaPlugin implements Listener{
 		}		
 		return false;
 	}
-    
 }
