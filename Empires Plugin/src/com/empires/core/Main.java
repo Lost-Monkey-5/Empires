@@ -11,6 +11,8 @@ import org.bukkit.event.player.PlayerEggThrowEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.empires.npc.PlayerNPC;
+
 public class Main extends JavaPlugin implements Listener{
 	@Override
 	public void onEnable() {
@@ -20,16 +22,17 @@ public class Main extends JavaPlugin implements Listener{
 		saveDefaultConfig();
 		
 		Bukkit.getPluginManager().registerEvents(this, this);
-		Bukkit.getPluginManager().registerEvents(new SpawnListener(), this);
+		Bukkit.getPluginManager().registerEvents(new JoinListener(), this);
+		Bukkit.getPluginManager().registerEvents(new PlayerNPC(), this);
 		
 		getCommand("heal").setExecutor(new HealCommand());
 		getCommand("number").setExecutor(new NumberCommand());
+		getCommand("spawnNPC").setExecutor(new PlayerNPC());
 	}
 	@Override
 	public void onDisable() {
 		System.out.println("Plugin Disabled!");
 	}
-	
 	@EventHandler
 	public void onMove(PlayerMoveEvent e) {
 		Player p = e.getPlayer();

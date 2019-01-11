@@ -18,7 +18,7 @@ import net.minecraft.server.v1_13_R2.IChatBaseComponent.ChatSerializer;
 import net.minecraft.server.v1_13_R2.PacketPlayOutTitle;
 import net.minecraft.server.v1_13_R2.PacketPlayOutTitle.EnumTitleAction;
 
-public class SpawnListener implements Listener {
+public class JoinListener implements Listener {
 	
 	@EventHandler
 	public void onSpawn(PlayerJoinEvent event) {

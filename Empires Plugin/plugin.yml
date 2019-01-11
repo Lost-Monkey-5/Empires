@@ -12,3 +12,5 @@ commands:
     description: Heals a player.
   number:
     description: Pick a number, any number!
+  spawnNPC:
+    description: Spamn an NPC at player's current position.
