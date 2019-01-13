@@ -1,8 +1,5 @@
 package com.empires.npc;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -11,27 +8,28 @@ import org.bukkit.entity.Player;
 
 import com.empires.core.Main;
 
-public class HandleNPC implements CommandExecutor{
-	private Set<PlayerNPC> npcSet = new HashSet<PlayerNPC>();
+public class SpawnNPC implements CommandExecutor{
 	private Main main;
-	public HandleNPC(Main main) {
+	public SpawnNPC(Main main) {
 		this.main = main;
 	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if((sender instanceof Player) && (args.length > 0)) {
+		if((args.length > 0) && (args[0] != null) && (sender instanceof Player)) {
 			//Cat name from args
 			String npcName = "";
 			for( String str : args)
 				npcName+= str + " ";
 			npcName = npcName.substring(0, npcName.length() - 1);
-			//construct the new npc
+			//Construct the new npc
 			PlayerNPC npc = new PlayerNPC(((Player) sender), npcName);
-			this.npcSet.add(npc);
+			//Save NPC 
+			this.main.npcContainer.addNPC(npc);
+			//Register Events with the NPC
 			Bukkit.getPluginManager().registerEvents(npc, this.main);
 			return true;
 		}
     	return false;
 	}
-
 }

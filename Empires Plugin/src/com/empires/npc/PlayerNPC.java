@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.util.Vector;
 
 import com.mojang.authlib.GameProfile;
 
@@ -48,6 +49,20 @@ public class PlayerNPC implements Listener{
 				p.getLocation().getPitch());
 		sendPacketsToOnlinePlayers();
 	}
+	public int getID() {
+		return entity.getId();
+	}
+	public String getName() {
+		return entity.getName();
+	}
+	/*public EntityPlayer getEntity() {
+		return this.entity;
+	}*/
+	public void setVelocity(Vector vel) {
+		entity.motX = vel.getX();
+		entity.motY = vel.getY();
+		entity.motZ = vel.getZ();
+	}
 	public void sendPacketsToOnlinePlayers() {
 		for(Player p : Bukkit.getOnlinePlayers()) {
 			sendPacketsToOnlinePlayer(p);
@@ -66,21 +81,18 @@ public class PlayerNPC implements Listener{
 	@EventHandler
 	public void sendPackets(PlayerJoinEvent e) {
 		if (this.entity != null) {
-			if(this.entity.valid) {
+			//if(this.entity.valid) {
 				System.out.println("Sending PlayerNPC Packets to new player.");
 				sendPacketsToOnlinePlayer(e.getPlayer());
-			} else {
+			/*} else {
 				System.err.println("Entity is not valid on PlayerJoinEvent.");
-			}
+			}*/
 		} else {
 			System.out.print("Class entity is null.");
 		}
 	}
-	public EntityPlayer getEntity() {
-		return this.entity;
-	}
 	public boolean equals(PlayerNPC rhs) {
-		return this.entity.equals(rhs.getEntity());
+		return this.entity.equals(rhs.entity);
 	}
 	public int hashCode() {
 		int hash = 7;
