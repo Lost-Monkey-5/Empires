@@ -1,9 +1,6 @@
 package com.empires.npc;
 
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_13_R2.CraftServer;
 import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
@@ -22,11 +19,16 @@ import net.minecraft.server.v1_13_R2.PlayerConnection;
 import net.minecraft.server.v1_13_R2.PlayerInteractManager;
 import net.minecraft.server.v1_13_R2.WorldServer;
 
-public class PlayerNPC implements Listener, CommandExecutor{
+public class PlayerNPC implements Listener{
+	public static final int PlayerNameMaxLength = 16; 
 	private EntityPlayer entity;
 	
-	public void createPlayerNPC(Player p, String playerNPCName) {
+	public PlayerNPC(Player p, String playerNPCName) {
 		System.out.println("Contructing PlayerNPC");
+		//Check the maximum length of the name
+		if(playerNPCName.length() > PlayerNameMaxLength) {
+			playerNPCName = playerNPCName.substring(0, PlayerNameMaxLength);
+		} 
 		//Get the NMS Server Class
 		MinecraftServer serverNMS = ((CraftServer) Bukkit.getServer()).getServer();
 		//Get the NMS World Class
@@ -47,37 +49,42 @@ public class PlayerNPC implements Listener, CommandExecutor{
 		sendPacketsToOnlinePlayers();
 	}
 	public void sendPacketsToOnlinePlayers() {
-		for(Player all : Bukkit.getOnlinePlayers()) {
-			//Get Player Connection
-			PlayerConnection connection = ((CraftPlayer) all.getPlayer()).getHandle().playerConnection;
-			//Send Packets
-			connection.sendPacket(new PacketPlayOutPlayerInfo(
-					PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
-			connection.sendPacket(new PacketPlayOutNamedEntitySpawn(this.entity));
-			connection.sendPacket(new PacketPlayOutPlayerInfo(
-					PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
+		for(Player p : Bukkit.getOnlinePlayers()) {
+			sendPacketsToOnlinePlayer(p);
 		}
 	}
-	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if((sender instanceof Player) && (args.length > 0)) {
-			createPlayerNPC(((Player) sender), args[0]);
-			return true;
-		}
-    	return false;
+	public void sendPacketsToOnlinePlayer(Player player) {
+		//Get Player Connection
+		PlayerConnection connection = ((CraftPlayer) player.getPlayer()).getHandle().playerConnection;
+		//Send Packets
+		connection.sendPacket(new PacketPlayOutPlayerInfo(
+				PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
+		connection.sendPacket(new PacketPlayOutNamedEntitySpawn(this.entity));
+		connection.sendPacket(new PacketPlayOutPlayerInfo(
+				PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
 	}
 	@EventHandler
 	public void sendPackets(PlayerJoinEvent e) {
-		if(this.entity.valid) {
-			System.out.println("Sending PlayerNPC Packets to new player.");
-			//Get Player Connection
-			PlayerConnection connection = ((CraftPlayer) e.getPlayer()).getHandle().playerConnection;
-			//Send Packets
-			connection.sendPacket(new PacketPlayOutPlayerInfo(
-					PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
-			connection.sendPacket(new PacketPlayOutNamedEntitySpawn(this.entity));
-			connection.sendPacket(new PacketPlayOutPlayerInfo(
-					PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
+		if (this.entity != null) {
+			if(this.entity.valid) {
+				System.out.println("Sending PlayerNPC Packets to new player.");
+				sendPacketsToOnlinePlayer(e.getPlayer());
+			} else {
+				System.err.println("Entity is not valid on PlayerJoinEvent.");
+			}
+		} else {
+			System.out.print("Class entity is null.");
 		}
+	}
+	public EntityPlayer getEntity() {
+		return this.entity;
+	}
+	public boolean equals(PlayerNPC rhs) {
+		return this.entity.equals(rhs.getEntity());
+	}
+	public int hashCode() {
+		int hash = 7;
+		hash = 31 * hash + (null == entity ? 0 : entity.hashCode());
+		return hash;
 	}
 }
