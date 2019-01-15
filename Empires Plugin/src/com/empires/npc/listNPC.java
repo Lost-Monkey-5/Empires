@@ -1,5 +1,6 @@
 package com.empires.npc;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,17 +17,44 @@ public class listNPC implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if((args.length > 0) && (args[0] != null)) {
-			System.out.println("Listing all NPC's");
-			if((args[0].contentEquals("all")) && (sender instanceof Player)) {
-				Player p = ((Player) sender);
-				String listOfNPCS = "Current NPC's:";
+			String listOfNPCS = "";
+			if(args[0].contentEquals("all")) {
+				System.out.println("Listing all NPC's");
+				listOfNPCS = "Current NPC's:";
 			    for (PlayerNPC npc : main.npcContainer.getAllNPCS()) {
-			    	listOfNPCS += "\nNPC:\n" + ChatColor.GRAY + "  Name: " 
-			    			+ ChatColor.DARK_GREEN + npc.getName()
-			    			+ "\n" + ChatColor.GRAY + "  ID: "
-			    			+ ChatColor.DARK_GREEN + npc.getID();
+			    	listOfNPCS += npc.getPrintInfo();
 			    }
+			} else if((args.length == 1)) {
+				System.out.println("args.length = 1");
+				PlayerNPC npc;
+				if(StringUtils.isNumeric(args[0]))
+				{
+					int id = Integer.parseInt(args[0]);
+					npc = main.npcContainer.getNPC(id);
+				} else {
+					String name = args[0];
+					System.out.println("Name is: " + name);
+					npc = main.npcContainer.getNPC(name);
+				}
+				if(npc != null) {
+				  listOfNPCS += npc.getPrintInfo();
+				}
+			} else if(args.length > 1) {
+				String npcName = "";
+				for( String str : args)
+					npcName+= str + " ";
+				npcName = npcName.substring(0, npcName.length() - 1);
+				System.out.println("The name is: " + ChatColor.DARK_GREEN + npcName);
+				PlayerNPC npc = main.npcContainer.getNPC(npcName);
+				if(npc != null) {
+					  listOfNPCS += npc.getPrintInfo();
+				}
+			}
+			if(sender instanceof Player) {
+				Player p = ((Player) sender);
 				p.sendMessage(listOfNPCS);
+			} else {
+				System.out.println(listOfNPCS);
 			}
 			return true;
 		}

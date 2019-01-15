@@ -1,6 +1,7 @@
 package com.empires.npc;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.v1_13_R2.CraftServer;
 import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
@@ -58,6 +59,12 @@ public class PlayerNPC implements Listener{
 	/*public EntityPlayer getEntity() {
 		return this.entity;
 	}*/
+	public String getPrintInfo() {
+		return ChatColor.WHITE + "\nNPC:\n" + ChatColor.GRAY 
+				+ "  Name: " + ChatColor.DARK_GREEN + getName()
+    			+ "\n" + ChatColor.GRAY + "  ID: "
+    			+ ChatColor.DARK_GREEN + getID();
+	}
 	public void setVelocity(Vector vel) {
 		entity.motX = vel.getX();
 		entity.motY = vel.getY();
