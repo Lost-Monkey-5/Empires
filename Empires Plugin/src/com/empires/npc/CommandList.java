@@ -7,12 +7,10 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.empires.core.Main;
-
-public class listNPC implements CommandExecutor {
-	private Main main;
-	public listNPC(Main main){
-		this.main = main;
+public class CommandList implements CommandExecutor {
+	private NPCMain npcMain;
+	public CommandList(NPCMain npcMain){
+		this.npcMain = npcMain;
 	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -21,7 +19,7 @@ public class listNPC implements CommandExecutor {
 			if(args[0].contentEquals("all")) {
 				System.out.println("Listing all NPC's");
 				listOfNPCS = "Current NPC's:";
-			    for (PlayerNPC npc : main.npcContainer.getAllNPCS()) {
+			    for (PlayerNPC npc : npcMain.getContainer().getAllNPCS()) {
 			    	listOfNPCS += npc.getPrintInfo();
 			    }
 			} else if((args.length == 1)) {
@@ -30,11 +28,11 @@ public class listNPC implements CommandExecutor {
 				if(StringUtils.isNumeric(args[0]))
 				{
 					int id = Integer.parseInt(args[0]);
-					npc = main.npcContainer.getNPC(id);
+					npc = npcMain.getContainer().getNPC(id);
 				} else {
 					String name = args[0];
 					System.out.println("Name is: " + name);
-					npc = main.npcContainer.getNPC(name);
+					npc = npcMain.getContainer().getNPC(name);
 				}
 				if(npc != null) {
 				  listOfNPCS += npc.getPrintInfo();
@@ -45,7 +43,7 @@ public class listNPC implements CommandExecutor {
 					npcName+= str + " ";
 				npcName = npcName.substring(0, npcName.length() - 1);
 				System.out.println("The name is: " + ChatColor.DARK_GREEN + npcName);
-				PlayerNPC npc = main.npcContainer.getNPC(npcName);
+				PlayerNPC npc = npcMain.getContainer().getNPC(npcName);
 				if(npc != null) {
 					  listOfNPCS += npc.getPrintInfo();
 				}
