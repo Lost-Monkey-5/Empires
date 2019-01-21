@@ -26,6 +26,7 @@ public class NPCMain implements Listener {
 		main.getCommand("spawn").setExecutor(new CommandSpawn(this, main));
 		main.getCommand("list").setExecutor(new CommandList(this));
 		main.getCommand("velocity").setExecutor(new CommandVelocity(this));
+		
 	}
 
 	public ContainerNPC getContainer() {
