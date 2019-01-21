@@ -38,7 +38,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 			WorldServer worldNMS = ((CraftWorld) l.getWorld()).getHandle();
 			// Create a GameProfile
 			GameProfile gameProfile = new GameProfile(UUID.randomUUID(), playerNPCName);
-			// Create Player Interact Manager
+			// Create Playsxer Interact Manager
 			PlayerInteractManager playerIM = new PlayerInteractManager(worldNMS);
 			// set the new Entity
 			this.entity = new EntityPlayer(serverNMS, worldNMS, gameProfile, playerIM);
@@ -48,18 +48,13 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 			System.err.println("PlayerNPC Constructor failed to create PlayerEntity.");
 			ex.printStackTrace();
 		}
-		//sendSpawnPacketsToOnlinePlayers();
-		System.out.println("Done with PlayerNPC constructor!");
+		sendSpawnPacketsToOnlinePlayers();
 	}
 
-	public PlayerNPC(Player p, String playerNPCName) {
-		this(p.getLocation(), playerNPCName, null);
-	}
-
-	public PlayerNPC(Location location, String playerNPCName, Player p) {
+	public PlayerNPC(Location location, String playerNPCName, Player owner) {
 		this(location, playerNPCName);
-		this.setOwner(p);
-		p.sendMessage("Contructed PlayerNPC: " + playerNPCName);
+		this.setOwner(owner);
+		owner.sendMessage("Contructed PlayerNPC: " + playerNPCName);
 	}
 
 	public int getID() {

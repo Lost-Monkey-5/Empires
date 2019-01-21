@@ -42,6 +42,7 @@ public class CommandSpawn implements CommandExecutor {
 				} else {
 					PlayerNPC npc = new PlayerNPC(location, npcName);
 					saveNPC(npc);
+					return true;
 				}
 			} else if (sender instanceof Player) {
 				// Get the player who issued the command
@@ -51,10 +52,14 @@ public class CommandSpawn implements CommandExecutor {
 						npcName = args[1];
 					else
 						npcName = catName(Arrays.copyOfRange(args, 1, args.length - 1));
-					System.out.println("Spawning " + npcName + " in " + p.getName());
-					PlayerNPC npc = new PlayerNPC(p, npcName);
-					System.out.println("Past NPC Constructor!");
-					saveNPC(npc);
+					try {
+						PlayerNPC npc = new PlayerNPC(p.getLocation(), npcName, p);
+						saveNPC(npc);
+						return true;
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						return false;
+					}
 				} else {
 					// Get the name from the last set of arguments past in
 					npcName = catName(Arrays.copyOfRange(args, 6, args.length - 1));
@@ -70,6 +75,7 @@ public class CommandSpawn implements CommandExecutor {
 					} else {
 						PlayerNPC npc = new PlayerNPC(location, npcName, p);
 						saveNPC(npc);
+						return true;
 					}
 				}
 			} else {
@@ -83,6 +89,7 @@ public class CommandSpawn implements CommandExecutor {
 				} else {
 					PlayerNPC npc = new PlayerNPC(location, npcName);
 					saveNPC(npc);
+					return true;
 				}
 			}
 		}
@@ -109,9 +116,9 @@ public class CommandSpawn implements CommandExecutor {
 		return new Location(world, Double.parseDouble(corrdinates[1]), Double.parseDouble(corrdinates[2]),
 				Double.parseDouble(corrdinates[3]), Float.parseFloat(corrdinates[4]), Float.parseFloat(corrdinates[5]));
 	}
+
 	private void saveNPC(PlayerNPC npc) {
 		if (npc != null) {
-			System.out.println("Saving Character to container.");
 			// Save NPC
 			this.npcMain.getContainer().addNPC(npc);
 			// Register Events with the NPC
