@@ -8,14 +8,20 @@ import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_13_R2.CraftServer;
 import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.util.Vector;
 
 import com.mojang.authlib.GameProfile;
 
 import net.minecraft.server.v1_13_R2.EntityPlayer;
 import net.minecraft.server.v1_13_R2.MinecraftServer;
-//import net.minecraft.server.v1_13_R2.PacketPlayOutEntityDestroy;
+import net.minecraft.server.v1_13_R2.Packet;
+import net.minecraft.server.v1_13_R2.PacketPlayOutEntity;
+import net.minecraft.server.v1_13_R2.PacketPlayOutEntity.PacketPlayOutEntityLook;
+import net.minecraft.server.v1_13_R2.PacketPlayOutEntityDestroy;
+import net.minecraft.server.v1_13_R2.PacketPlayOutLookAt;
 import net.minecraft.server.v1_13_R2.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_13_R2.PacketPlayOutPlayerInfo;
 import net.minecraft.server.v1_13_R2.PlayerInteractManager;
@@ -38,7 +44,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 			WorldServer worldNMS = ((CraftWorld) l.getWorld()).getHandle();
 			// Create a GameProfile
 			GameProfile gameProfile = new GameProfile(UUID.randomUUID(), playerNPCName);
-			// Create Playsxer Interact Manager
+			// Create Player Interact Manager
 			PlayerInteractManager playerIM = new PlayerInteractManager(worldNMS);
 			// set the new Entity
 			this.entity = new EntityPlayer(serverNMS, worldNMS, gameProfile, playerIM);
@@ -48,7 +54,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 			System.err.println("PlayerNPC Constructor failed to create PlayerEntity.");
 			ex.printStackTrace();
 		}
-		sendSpawnPacketsToOnlinePlayers();
+		this.sendSpawnPacketsToOnlinePlayers();
 	}
 
 	public PlayerNPC(Location location, String playerNPCName, Player owner) {
@@ -98,25 +104,46 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		sendSpawnPacketsToOnlinePlayers();
 	}
 
-	public void sendSpawnPacketsToOnlinePlayers() {
+	public void sendPacketToOnlinePlayers(Packet<?> packet) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			sendSpawnPacketsToPlayer(p);
+			sendPacket(p, packet);
 		}
 	}
 	public void Destroy() {
-		//PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(this.getID());
-	}
-	
-	public void sendSpawnPacketsToPlayer(Player player) {
-		if (this.entity != null) {
-			sendPacket(player,
-					new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
-			sendPacket(player, new PacketPlayOutNamedEntitySpawn(this.entity));
-			sendPacket(player, new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER,
-					this.entity));
+		PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(this.getID());
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			sendPacket(p, packet);
 		}
 	}
-
+	
+	public void sendSpawnPacketsToOnlinePlayers() {
+		if (this.entity != null) {
+			for (Player p : Bukkit.getOnlinePlayers())
+				sendSpawnPacketsToPlayer(p);
+			}
+	}
+	
+	public void sendSpawnPacketsToPlayer(Player p) {
+		sendPacket(p, new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
+		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
+		sendPacket(p, new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
+	}
+    
+	public void rotatePlayerHead(float pitch, float yaw) {
+		PacketPlayOutEntity.PacketPlayOutEntityLook packet = new PacketPlayOutEntityLook(this.getID(),(byte) pitch, (byte) yaw, true);
+		sendPacket(this.owner, packet);
+	}
+	
+	@EventHandler
+	public void onJoin(PlayerJoinEvent e) {
+		sendSpawnPacketsToPlayer(e.getPlayer());
+	}
+	/*
+	@EventHandler
+	public void onInteract( e) {
+		sendSpawnPacketsToPlayer(e.getPlayer());
+	}
+	*/
 	public boolean equals(PlayerNPC rhs) {
 		return this.entity.equals(rhs.entity);
 	}
