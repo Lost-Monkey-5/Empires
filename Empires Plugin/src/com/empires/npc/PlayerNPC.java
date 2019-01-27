@@ -21,7 +21,7 @@ import net.minecraft.server.v1_13_R2.Packet;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntity;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntity.PacketPlayOutEntityLook;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntityDestroy;
-import net.minecraft.server.v1_13_R2.PacketPlayOutLookAt;
+import net.minecraft.server.v1_13_R2.PacketPlayOutEntityHeadRotation;
 import net.minecraft.server.v1_13_R2.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_13_R2.PacketPlayOutPlayerInfo;
 import net.minecraft.server.v1_13_R2.PlayerInteractManager;
@@ -31,7 +31,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 	public static final int PlayerNameMaxLength = 16;
 	private EntityPlayer entity;
 	private Player owner;
-    
+
 	public PlayerNPC(Location l, String playerNPCName) {
 		// Check the maximum length of the name
 		if (playerNPCName.length() > PlayerNameMaxLength) {
@@ -109,41 +109,52 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 			sendPacket(p, packet);
 		}
 	}
+
 	public void Destroy() {
 		PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(this.getID());
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			sendPacket(p, packet);
 		}
 	}
-	
+
 	public void sendSpawnPacketsToOnlinePlayers() {
 		if (this.entity != null) {
 			for (Player p : Bukkit.getOnlinePlayers())
 				sendSpawnPacketsToPlayer(p);
-			}
+		}
 	}
-	
+
 	public void sendSpawnPacketsToPlayer(Player p) {
-		sendPacket(p, new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
+		sendPacket(p,
+				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
 		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
-		sendPacket(p, new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
+		sendPacket(p,
+				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
 	}
-    
-	public void rotatePlayerHead(float pitch, float yaw) {
-		PacketPlayOutEntity.PacketPlayOutEntityLook packet = new PacketPlayOutEntityLook(this.getID(),(byte) pitch, (byte) yaw, true);
-		sendPacket(this.owner, packet);
+
+	public void rotatePlayerHead(float headPitchDegrees, float headYawDegrees, float bodyYawDegrees) {
+
+		byte headYaw = (byte) (headYawDegrees * 256F / 360F);
+		byte bodyYaw = (byte) (bodyYawDegrees * 256F / 360F);
+		boolean onGround = true;
+
+		PacketPlayOutEntity.PacketPlayOutEntityLook packet1 = new PacketPlayOutEntityLook(this.getID(),
+				(byte) headPitchDegrees, bodyYaw, onGround);
+		sendPacketToOnlinePlayers(packet1);
+
+		PacketPlayOutEntityHeadRotation packet2 = new PacketPlayOutEntityHeadRotation(this.entity, headYaw);
+		sendPacketToOnlinePlayers(packet2);
 	}
-	
+
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		sendSpawnPacketsToPlayer(e.getPlayer());
 	}
+
 	/*
-	@EventHandler
-	public void onInteract( e) {
-		sendSpawnPacketsToPlayer(e.getPlayer());
-	}
-	*/
+	 * @EventHandler public void onInteract( e) {
+	 * sendSpawnPacketsToPlayer(e.getPlayer()); }
+	 */
 	public boolean equals(PlayerNPC rhs) {
 		return this.entity.equals(rhs.entity);
 	}

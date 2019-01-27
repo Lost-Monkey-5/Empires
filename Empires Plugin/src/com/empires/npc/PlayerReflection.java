@@ -85,6 +85,17 @@ public class PlayerReflection {
 			ex.printStackTrace();
 		}
 	}
+	
+	public void setField(Object obj, String name, Object value) {
+		try {
+			Field field = obj.getClass().getField(name);
+			field.setAccessible(true);
+			field.set(obj, value);
+		} catch (Exception ex) {
+			System.err.println("Faild to set field " + name + " in class " + obj.getClass().getName());
+			ex.printStackTrace();
+		}
+	}
 
 	public void sendPacket(Player player, Object packet) {
 		try {
