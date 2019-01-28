@@ -20,8 +20,10 @@ import net.minecraft.server.v1_13_R2.MinecraftServer;
 import net.minecraft.server.v1_13_R2.Packet;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntity;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntity.PacketPlayOutEntityLook;
+import net.minecraft.server.v1_13_R2.PacketPlayOutEntity.PacketPlayOutRelEntityMove;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntityHeadRotation;
+import net.minecraft.server.v1_13_R2.PacketPlayOutEntityVelocity;
 import net.minecraft.server.v1_13_R2.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_13_R2.PacketPlayOutPlayerInfo;
 import net.minecraft.server.v1_13_R2.PlayerInteractManager;
@@ -92,7 +94,10 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		}
 		return information;
 	}
-
+    public Vector getVelocity() {
+    	return new Vector(entity.motX, entity.motY, entity.motZ);
+    }
+    
 	public void setOwner(Player owner) {
 		this.owner = owner;
 	}
@@ -101,7 +106,9 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		entity.motX = vel.getX();
 		entity.motY = vel.getY();
 		entity.motZ = vel.getZ();
-		sendSpawnPacketsToOnlinePlayers();
+		
+		PacketPlayOutEntityVelocity packet = new PacketPlayOutEntityVelocity(this.entity);
+		sendPacketToOnlinePlayers(packet);
 	}
 
 	public void sendPacketToOnlinePlayers(Packet<?> packet) {
@@ -128,33 +135,47 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		sendPacket(p,
 				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
 		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
-		sendPacket(p,
-				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
+		//sendPacket(p,
+		//		new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
 	}
+    
+    public void move(float deltaX, float deltaY, float deltaZ) {
+    	//Calculate movement factor
+    	float movmentFactor = 32 * 128;
+    	//Calculate the change in each direction with moment factor
+    	long dx = (long) (deltaX * movmentFactor);
+    	long dy = (long) (deltaY * movmentFactor);
+    	long dz = (long) (deltaZ * movmentFactor);
+    	//Boolean for on ground argument of packet 
+    	boolean onGround = true;
+    	//Construct the packet
+    	PacketPlayOutEntity.PacketPlayOutRelEntityMove packet = new PacketPlayOutRelEntityMove(this.getID(), dx, dy, dz, onGround);
+    	sendPacketToOnlinePlayers(packet);
+    }
 
 	public void rotatePlayerHead(float headPitchDegrees, float headYawDegrees, float bodyYawDegrees) {
-
+        //Packet arguments are not in degrees, but in 256 ticks per revolution for Yaw
 		byte headYaw = (byte) (headYawDegrees * 256F / 360F);
 		byte bodyYaw = (byte) (bodyYawDegrees * 256F / 360F);
 		boolean onGround = true;
-
+        
+		//Construct the first packet, for head pitch and body yaw angles.
 		PacketPlayOutEntity.PacketPlayOutEntityLook packet1 = new PacketPlayOutEntityLook(this.getID(),
 				(byte) headPitchDegrees, bodyYaw, onGround);
+		//Send out the first packet to players
 		sendPacketToOnlinePlayers(packet1);
-
+        //Construct the second packet, for head yaw angle.
 		PacketPlayOutEntityHeadRotation packet2 = new PacketPlayOutEntityHeadRotation(this.entity, headYaw);
+		//Send out the second packet to players
 		sendPacketToOnlinePlayers(packet2);
 	}
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
+		//Send packets to new player to show the NPC
 		sendSpawnPacketsToPlayer(e.getPlayer());
 	}
 
-	/*
-	 * @EventHandler public void onInteract( e) {
-	 * sendSpawnPacketsToPlayer(e.getPlayer()); }
-	 */
 	public boolean equals(PlayerNPC rhs) {
 		return this.entity.equals(rhs.entity);
 	}
