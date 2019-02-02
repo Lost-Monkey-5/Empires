@@ -20,7 +20,7 @@ public class CommandLook implements CommandExecutor {
 			float yawHead = Float.parseFloat(args[2]);
 			float yawBody = Float.parseFloat(args[3]);
 			try {
-				npcMain.getContainer().getNPC(id).rotatePlayerHead(pitchHead, yawHead, yawBody);
+				npcMain.getContainer().getNPC(id).orientation(pitchHead, yawHead, yawBody);
 			} catch (Exception ex) {
 				System.out.println("Failed to rotate head on command!");
 				ex.printStackTrace();

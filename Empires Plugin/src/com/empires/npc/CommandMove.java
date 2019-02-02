@@ -1,14 +1,13 @@
 package com.empires.npc;
 
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-public class CommandMoveTo implements CommandExecutor {
+public class CommandMove implements CommandExecutor {
 	private NPCMain npcMain;
 
-	public CommandMoveTo(NPCMain npcMain) {
+	public CommandMove(NPCMain npcMain) {
 		this.npcMain = npcMain;
 	}
 

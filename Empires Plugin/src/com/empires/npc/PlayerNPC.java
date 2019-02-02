@@ -65,6 +65,14 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		owner.sendMessage("Contructed PlayerNPC: " + playerNPCName);
 	}
 
+	public float getHeadRotation() {
+		return this.entity.getHeadRotation();
+	}
+
+	public float getHeadRotationInDegrees() {
+		return this.entity.getHeadRotation() * 360F / 256F;
+	}
+
 	public int getID() {
 		return entity.getId();
 	}
@@ -94,31 +102,46 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		}
 		return information;
 	}
-    public Vector getVelocity() {
-    	return new Vector(entity.motX, entity.motY, entity.motZ);
-    }
-    
+
+	public Vector getVelocity() {
+		return new Vector(entity.motX, entity.motY, entity.motZ);
+	}
+
+	public void setHeadRotation(float headYaw) {
+		this.entity.setHeadRotation(headYaw);
+	}
+
+	public void setHeadRotationFromDegrees(float headYawDegrees) {
+		this.entity.setHeadRotation(headYawDegrees);
+	}
+
+	public void setLocation(Location l) {
+		this.entity.setLocation(l.getX(), l.getY(), l.getZ(), l.getYaw(), l.getPitch());
+	}
+
 	public void setOwner(Player owner) {
 		this.owner = owner;
 	}
 
 	public void setVelocity(Vector vel) {
-		entity.motX = vel.getX();
-		entity.motY = vel.getY();
-		entity.motZ = vel.getZ();
-		
+		// Units of packet are 1/8000 of a block per server tick (50ms)
+		double converstionConstant = (1 / 8000) * 50E-3;
+		entity.motX = vel.getX() * converstionConstant;
+		entity.motY = vel.getY() * converstionConstant;
+		entity.motZ = vel.getZ() * converstionConstant;
+
 		PacketPlayOutEntityVelocity packet = new PacketPlayOutEntityVelocity(this.entity);
 		sendPacketToOnlinePlayers(packet);
 	}
 
-	public void sendPacketToOnlinePlayers(Packet<?> packet) {
+	public void Destroy() {
+		PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(this.getID());
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			sendPacket(p, packet);
 		}
 	}
 
-	public void Destroy() {
-		PacketPlayOutEntityDestroy packet = new PacketPlayOutEntityDestroy(this.getID());
+	public void sendPacketToOnlinePlayers(Packet<?> packet) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			sendPacket(p, packet);
 		}
@@ -135,44 +158,65 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		sendPacket(p,
 				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
 		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
-		//sendPacket(p,
-		//		new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, this.entity));
+		// sendPacket(p,
+		// new
+		// PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER,
+		// this.entity));
 	}
-    
-    public void move(float deltaX, float deltaY, float deltaZ) {
-    	//Calculate movement factor
-    	float movmentFactor = 32 * 128;
-    	//Calculate the change in each direction with moment factor
-    	long dx = (long) (deltaX * movmentFactor);
-    	long dy = (long) (deltaY * movmentFactor);
-    	long dz = (long) (deltaZ * movmentFactor);
-    	//Boolean for on ground argument of packet 
-    	boolean onGround = true;
-    	//Construct the packet
-    	PacketPlayOutEntity.PacketPlayOutRelEntityMove packet = new PacketPlayOutRelEntityMove(this.getID(), dx, dy, dz, onGround);
-    	sendPacketToOnlinePlayers(packet);
-    }
 
-	public void rotatePlayerHead(float headPitchDegrees, float headYawDegrees, float bodyYawDegrees) {
-        //Packet arguments are not in degrees, but in 256 ticks per revolution for Yaw
-		byte headYaw = (byte) (headYawDegrees * 256F / 360F);
-		byte bodyYaw = (byte) (bodyYawDegrees * 256F / 360F);
+	public void face(float bodyYawDegrees) {
+		this.orientation(this.getLocation().getPitch(), this.getHeadRotationInDegrees(), bodyYawDegrees);
+	}
+
+	public void look(float headPitchDegrees, float headYawDegrees) {
+		this.orientation(headPitchDegrees, headYawDegrees, this.getLocation().getYaw());
+	}
+
+	public void move(float deltaX, float deltaY, float deltaZ) {
+		// Calculate movement factor
+		float movmentFactor = 32 * 128;
+		// Calculate the change in each direction with moment factor
+		long dx = (long) (deltaX * movmentFactor);
+		long dy = (long) (deltaY * movmentFactor);
+		long dz = (long) (deltaZ * movmentFactor);
+		// Boolean for on ground argument of packet
 		boolean onGround = true;
-        
-		//Construct the first packet, for head pitch and body yaw angles.
+		// Construct the packet
+		PacketPlayOutEntity.PacketPlayOutRelEntityMove packet = new PacketPlayOutRelEntityMove(this.getID(), dx, dy, dz,
+				onGround);
+		sendPacketToOnlinePlayers(packet);
+		Location oldLocation = this.getLocation();
+		// Save movement to the EntityPlayer
+		this.setLocation(new Location(oldLocation.getWorld(), oldLocation.getX() + deltaX, oldLocation.getY() + deltaY,
+				oldLocation.getZ() + deltaZ, oldLocation.getYaw(), oldLocation.getPitch()));
+		this.setHeadRotation(this.getHeadRotation());
+	}
+
+	public void orientation(float headPitchDegrees, float headYawDegrees, float bodyYawDegrees) {
+		// Packet arguments are not in degrees, but in 256 ticks per revolution for Yaw
+		byte headYaw = (byte) (headYawDegrees * 256F / 360F);
+		byte bodyYaw = (byte) (bodyYawDegrees);
+		boolean onGround = true;
+
+		// Construct the first packet, for head pitch and body yaw angles.
 		PacketPlayOutEntity.PacketPlayOutEntityLook packet1 = new PacketPlayOutEntityLook(this.getID(),
 				(byte) headPitchDegrees, bodyYaw, onGround);
-		//Send out the first packet to players
+		// Send out the first packet to players
 		sendPacketToOnlinePlayers(packet1);
-        //Construct the second packet, for head yaw angle.
+		// Construct the second packet, for head yaw angle.
 		PacketPlayOutEntityHeadRotation packet2 = new PacketPlayOutEntityHeadRotation(this.entity, headYaw);
-		//Send out the second packet to players
+		// Send out the second packet to players
 		sendPacketToOnlinePlayers(packet2);
+		// Save movement to the EntityPlayer
+		Location oldLocation = this.getLocation();
+		this.setLocation(new Location(oldLocation.getWorld(), oldLocation.getX(), oldLocation.getY(),
+				oldLocation.getZ(), bodyYawDegrees, headPitchDegrees));
+		this.setHeadRotationFromDegrees(headYawDegrees);
 	}
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
-		//Send packets to new player to show the NPC
+		// Send packets to new player to show the NPC
 		sendSpawnPacketsToPlayer(e.getPlayer());
 	}
 
