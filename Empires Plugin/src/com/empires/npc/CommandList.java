@@ -14,9 +14,10 @@ public class CommandList implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		String listOfNPCS = "Current NPC's:";
+		String listOfNPCS = "Current NPC's:\n";
 		for (PlayerNPC npc : npcMain.getContainer().getAllNPCS()) {
-			listOfNPCS += npc.getPrintInfo();
+			listOfNPCS += "NPC:\n";
+			listOfNPCS += npc.getInfoString();
 		}
 		if (sender instanceof Player) {
 			Player p = ((Player) sender);

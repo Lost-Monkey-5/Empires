@@ -89,13 +89,28 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		return owner;
 	}
 
-	public String getPrintInfo() {
-		String information = ChatColor.WHITE + "\nNPC:\n";
+	public String getInfoString() {
+		String information = "";
 		try {
-			information += ChatColor.GRAY + "  Name: " + ChatColor.DARK_GREEN + this.getName();
-			information += "\n" + ChatColor.GRAY + "  ID: " + ChatColor.DARK_GREEN + this.getID();
-			information += "\n" + ChatColor.GRAY + "  Location: " + ChatColor.DARK_GREEN + this.getLocation();
-			information += "\n" + ChatColor.GRAY + "  Owner: " + ChatColor.DARK_GREEN + this.getOwner().getName();
+			ChatColor W = ChatColor.WHITE;
+			ChatColor G = ChatColor.GRAY;
+			ChatColor DG = ChatColor.DARK_GREEN;
+			information += W + "  Name: " + DG + this.getName() + "\n";
+			information += W + "  ID: " + DG + this.getID() + "\n";
+			information += W + "  Location:\n";
+			information += G + "    Head:\n";
+			information += G + "      Pitch: " + DG + this.getLocation().getPitch() + "\n";
+			information += G + "      Yaw: " + DG + this.getHeadRotation() + "\n";
+			information += G + "      Height: " + DG + this.entity.getHeadHeight() + "\n";
+			information += G + "    Body:\n";
+			information += G + "      Yaw: " + DG + this.getLocation().getYaw() + "\n";
+			information += G + "    Pose:\n";
+			information += G + "      World: " + DG + this.getLocation().getWorld().getName() + "\n";
+			information += G + "      X: " + DG + this.getLocation().getX() + "\n";
+			information += G + "      Y: " + DG + this.getLocation().getY() + "\n";
+			information += G + "      Z: " + DG + this.getLocation().getZ() + "\n";
+			information += W + "  Owner: " + DG + this.getOwner().getName() + "\n";
+			information += W;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			information = ex.toString();
@@ -109,10 +124,6 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 
 	public void setHeadRotation(float headYaw) {
 		this.entity.setHeadRotation(headYaw);
-	}
-
-	public void setHeadRotationFromDegrees(float headYawDegrees) {
-		this.entity.setHeadRotation(headYawDegrees);
 	}
 
 	public void setLocation(Location l) {
@@ -139,6 +150,20 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			sendPacket(p, packet);
 		}
+	}
+
+	public void sendInformationPacketsToPlayer(Player p) {
+		boolean onGround = true;
+		// Send the player
+		sendPacket(p,
+				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
+		// Send players name
+		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
+		// Send players body yaw and head pitch
+		sendPacket(p, new PacketPlayOutEntityLook(this.getID(), (byte) this.getLocation().getPitch(),
+				(byte) this.getLocation().getYaw(), onGround));
+		// Send players head yaw
+		sendPacket(p, new PacketPlayOutEntityHeadRotation(this.entity, (byte) this.getHeadRotation()));
 	}
 
 	public void sendPacketToOnlinePlayers(Packet<?> packet) {
@@ -194,30 +219,37 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 
 	public void orientation(float headPitchDegrees, float headYawDegrees, float bodyYawDegrees) {
 		// Packet arguments are not in degrees, but in 256 ticks per revolution for Yaw
-		byte headYaw = (byte) (headYawDegrees * 256F / 360F);
-		byte bodyYaw = (byte) (bodyYawDegrees);
+		float convertion = 256F / 360F;
+		float headPitch = headPitchDegrees;
+		float headYaw = headYawDegrees * convertion;
+		float bodyYaw = bodyYawDegrees * convertion;
 		boolean onGround = true;
 
+		String message = "Head Pitch: " + headPitch;
+		message += "Head Yaw: " + headYaw;
+		message += "Body Yaw: " + bodyYaw;
+		
+		this.owner.sendMessage(message);
 		// Construct the first packet, for head pitch and body yaw angles.
 		PacketPlayOutEntity.PacketPlayOutEntityLook packet1 = new PacketPlayOutEntityLook(this.getID(),
-				(byte) headPitchDegrees, bodyYaw, onGround);
+				(byte) headPitch, (byte) bodyYaw, onGround);
 		// Send out the first packet to players
 		sendPacketToOnlinePlayers(packet1);
 		// Construct the second packet, for head yaw angle.
-		PacketPlayOutEntityHeadRotation packet2 = new PacketPlayOutEntityHeadRotation(this.entity, headYaw);
+		PacketPlayOutEntityHeadRotation packet2 = new PacketPlayOutEntityHeadRotation(this.entity, (byte) headYaw);
 		// Send out the second packet to players
 		sendPacketToOnlinePlayers(packet2);
 		// Save movement to the EntityPlayer
 		Location oldLocation = this.getLocation();
 		this.setLocation(new Location(oldLocation.getWorld(), oldLocation.getX(), oldLocation.getY(),
-				oldLocation.getZ(), bodyYawDegrees, headPitchDegrees));
-		this.setHeadRotationFromDegrees(headYawDegrees);
+				oldLocation.getZ(), bodyYaw, headPitch));
+		this.setHeadRotation(headYaw);
 	}
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		// Send packets to new player to show the NPC
-		sendSpawnPacketsToPlayer(e.getPlayer());
+		sendInformationPacketsToPlayer(e.getPlayer());
 	}
 
 	public boolean equals(PlayerNPC rhs) {
