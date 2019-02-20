@@ -38,7 +38,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		// Check the maximum length of the name
 		if (playerNPCName.length() > PlayerNameMaxLength) {
 			playerNPCName = playerNPCName.substring(0, PlayerNameMaxLength);
-		}
+		} 
 		try {
 			// Get the NMS Server Class
 			MinecraftServer serverNMS = ((CraftServer) Bukkit.getServer()).getServer();
