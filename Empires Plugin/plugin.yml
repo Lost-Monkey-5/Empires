@@ -1,16 +1,24 @@
 version: 1.0
 name: Empires
 main: com.empires.core.Main
-author: Samuel Dauchert
+author: Lost_Monkey_5
 description: Testing that Plugin!
 commands:
-  config:
-    aliases: [con]
-    description: Display configuration parameters!
-  heal:
-    aliases: [h]
-    description: Heals a player.
-  number:
-    description: Pick a number, any number!
-  spawnNPC:
-    description: Spamn an NPC at player's current position.
+  spawn:
+    description: Spawn an NPC at player's current position.
+    usage: |
+       /<command> <world> <location> <name>
+       Example: /<command> Max - Spawns NPC using current position named Max
+       Example: /<command> Mad Man - Spawns NPC using current position named Mad Man
+  list:
+    description: List all NPC players.
+    usage: /<command>
+  look:
+    description: Get NPC to look in direction.
+    usage: /<command> <id> <pitchHead> <yawHead> <yawBody>
+  move:
+    description: Tell NPC to move a specific number of blocks.
+    usage: /<command> <ID> <DeltaX> <DeltaY> <DeltaZ>
+  velocity:
+    description: List an NPC by player's Name, ID, or all NPC's.
+    usage: /<command> <ID> <VelInX> <VelInY> <VelInZ>

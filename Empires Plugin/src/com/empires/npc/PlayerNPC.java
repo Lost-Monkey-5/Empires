@@ -224,12 +224,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		float headYaw = headYawDegrees * convertion;
 		float bodyYaw = bodyYawDegrees * convertion;
 		boolean onGround = true;
-
-		String message = "Head Pitch: " + headPitch;
-		message += "Head Yaw: " + headYaw;
-		message += "Body Yaw: " + bodyYaw;
 		
-		this.owner.sendMessage(message);
 		// Construct the first packet, for head pitch and body yaw angles.
 		PacketPlayOutEntity.PacketPlayOutEntityLook packet1 = new PacketPlayOutEntityLook(this.getID(),
 				(byte) headPitch, (byte) bodyYaw, onGround);
@@ -241,9 +236,9 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		sendPacketToOnlinePlayers(packet2);
 		// Save movement to the EntityPlayer
 		Location oldLocation = this.getLocation();
+		this.setHeadRotation(headYaw);
 		this.setLocation(new Location(oldLocation.getWorld(), oldLocation.getX(), oldLocation.getY(),
 				oldLocation.getZ(), bodyYaw, headPitch));
-		this.setHeadRotation(headYaw);
 	}
 
 	@EventHandler
