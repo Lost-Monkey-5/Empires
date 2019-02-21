@@ -33,6 +33,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 	public static final int PlayerNameMaxLength = 16;
 	private EntityPlayer entity;
 	private Player owner;
+	protected Runnable ai = new NPCDefaultAI();
 
 	public PlayerNPC(Location l, String playerNPCName) {
 		// Check the maximum length of the name
