@@ -7,5 +7,9 @@ public class NPCDefaultAI implements Runnable{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	private void pathplanning() {
+		// TODO write a path planning algorithm.
+	}
 
 }
