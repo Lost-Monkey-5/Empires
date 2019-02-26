@@ -31,7 +31,7 @@ import net.minecraft.server.v1_13_R2.WorldServer;
 
 public class PlayerNPC extends PlayerReflection implements Listener {
 	public static final int PlayerNameMaxLength = 16;
-	private EntityPlayer entity;
+	private EntityNPC entity;
 	private Player owner;
 	protected Runnable ai = new NPCDefaultAI();
 
@@ -50,14 +50,26 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 			// Create Player Interact Manager
 			PlayerInteractManager playerIM = new PlayerInteractManager(worldNMS);
 			// set the new Entity
-			this.entity = new EntityPlayer(serverNMS, worldNMS, gameProfile, playerIM);
+			this.entity = new EntityNPC(serverNMS, worldNMS, gameProfile, playerIM);
 			// Set the new Entity location
 			this.entity.setLocation(l.getX(), l.getY(), l.getZ(), l.getYaw(), l.getPitch());
+			// Add the Entity to the world
+			worldNMS.addEntity(this.entity);
 		} catch (Exception ex) {
 			System.err.println("PlayerNPC Constructor failed to create PlayerEntity.");
 			ex.printStackTrace();
 		}
-		this.sendSpawnPacketsToOnlinePlayers();
+		//Check if entity is not null
+		if (this.entity != null) {
+			//Create the PacketPlayOutPlayerInfo packet for the client
+			PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity);
+			//Send packet to all online clients
+			sendPacketToOnlinePlayers(packet);
+			//Create the PacketPlayOutPlayerInfo packet for the client
+			PacketPlayOutNamedEntitySpawn packet2 = new PacketPlayOutNamedEntitySpawn(this.entity);
+			//Send packet to all online clients
+			sendPacketToOnlinePlayers(packet2);
+		}
 	}
 
 	public PlayerNPC(Location location, String playerNPCName, Player owner) {
@@ -151,43 +163,22 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			sendPacket(p, packet);
 		}
-	}
-
-	public void sendInformationPacketsToPlayer(Player p) {
-		boolean onGround = true;
-		// Send the player
-		sendPacket(p,
-				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
-		// Send players name
-		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
-		// Send players body yaw and head pitch
-		sendPacket(p, new PacketPlayOutEntityLook(this.getID(), (byte) this.getLocation().getPitch(),
-				(byte) this.getLocation().getYaw(), onGround));
-		// Send players head yaw
-		sendPacket(p, new PacketPlayOutEntityHeadRotation(this.entity, (byte) this.getHeadRotation()));
+		try {
+			// Get the NMS World Class
+			WorldServer worldNMS = ((CraftWorld) this.getLocation().getWorld()).getHandle();
+			// Add the Entity to the world
+			worldNMS.removeEntity(this.entity);
+		} catch (Exception ex) {
+			System.err.println("PlayerNPC Constructor failed to create PlayerEntity.");
+			ex.printStackTrace();
+		}
+		
 	}
 
 	public void sendPacketToOnlinePlayers(Packet<?> packet) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			sendPacket(p, packet);
 		}
-	}
-
-	public void sendSpawnPacketsToOnlinePlayers() {
-		if (this.entity != null) {
-			for (Player p : Bukkit.getOnlinePlayers())
-				sendSpawnPacketsToPlayer(p);
-		}
-	}
-
-	public void sendSpawnPacketsToPlayer(Player p) {
-		sendPacket(p,
-				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
-		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
-		// sendPacket(p,
-		// new
-		// PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER,
-		// this.entity));
 	}
 
 	public void face(float bodyYawDegrees) {
@@ -245,7 +236,18 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		// Send packets to new player to show the NPC
-		sendInformationPacketsToPlayer(e.getPlayer());
+		Player p = e.getPlayer();
+		boolean onGround = true;
+		// Send the player
+		sendPacket(p,
+				new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity));
+		// Send players name
+		sendPacket(p, new PacketPlayOutNamedEntitySpawn(this.entity));
+		// Send players body yaw and head pitch
+		sendPacket(p, new PacketPlayOutEntityLook(this.getID(), (byte) this.getLocation().getPitch(),
+				(byte) this.getLocation().getYaw(), onGround));
+		// Send players head yaw
+		sendPacket(p, new PacketPlayOutEntityHeadRotation(this.entity, (byte) this.getHeadRotation()));
 	}
 
 	public boolean equals(PlayerNPC rhs) {
