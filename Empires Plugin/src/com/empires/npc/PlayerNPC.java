@@ -15,7 +15,6 @@ import org.bukkit.util.Vector;
 
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.server.v1_13_R2.EntityPlayer;
 import net.minecraft.server.v1_13_R2.MinecraftServer;
 import net.minecraft.server.v1_13_R2.Packet;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntity;
@@ -54,6 +53,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 			// Set the new Entity location
 			this.entity.setLocation(l.getX(), l.getY(), l.getZ(), l.getYaw(), l.getPitch());
 			// Add the Entity to the world
+			this.entity.spawnIn(worldNMS);
 			worldNMS.addEntity(this.entity);
 		} catch (Exception ex) {
 			System.err.println("PlayerNPC Constructor failed to create PlayerEntity.");
@@ -62,13 +62,13 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		//Check if entity is not null
 		if (this.entity != null) {
 			//Create the PacketPlayOutPlayerInfo packet for the client
-			PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity);
+			//PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, this.entity);
 			//Send packet to all online clients
-			sendPacketToOnlinePlayers(packet);
+			//sendPacketToOnlinePlayers(packet);
 			//Create the PacketPlayOutPlayerInfo packet for the client
-			PacketPlayOutNamedEntitySpawn packet2 = new PacketPlayOutNamedEntitySpawn(this.entity);
+			//PacketPlayOutNamedEntitySpawn packet2 = new PacketPlayOutNamedEntitySpawn(this.entity);
 			//Send packet to all online clients
-			sendPacketToOnlinePlayers(packet2);
+			//sendPacketToOnlinePlayers(packet2);
 		}
 	}
 
@@ -102,7 +102,7 @@ public class PlayerNPC extends PlayerReflection implements Listener {
 		return owner;
 	}
 
-	public String getInfoString() {
+	public String toString() {
 		String information = "";
 		try {
 			ChatColor W = ChatColor.WHITE;

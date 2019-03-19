@@ -17,7 +17,7 @@ public class CommandList implements CommandExecutor {
 		String listOfNPCS = "Current NPC's:\n";
 		for (PlayerNPC npc : npcMain.getContainer().getAllNPCS()) {
 			listOfNPCS += "NPC:\n";
-			listOfNPCS += npc.getInfoString();
+			listOfNPCS += npc.toString();
 		}
 		if (sender instanceof Player) {
 			Player p = ((Player) sender);
